@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "IngestionEnvelope",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "eventType",
+    "sourceSystem",
+    "producedAt",
+    "region",
+    "file"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string"
+    },
+    "eventType": {
+      "type": "string"
+    },
+    "sourceSystem": {
+      "type": "string"
+    },
+    "producedAt": {
+      "type": "string"
+    },
+    "region": {
+      "type": "string"
+    },
+    "file": {
+      "type": "object",
+      "required": [
+        "bucket",
+        "key"
+      ],
+      "properties": {
+        "bucket": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      }
+    },
+    "trace": {
+      "type": "object",
+      "properties": {
+        "correlationId": {
+          "type": "string"
+        },
+        "account": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
