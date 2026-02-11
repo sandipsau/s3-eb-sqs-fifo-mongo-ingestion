@@ -8,3 +8,5 @@ tags = {
   environment = "qa"
   service     = "ingestion"
 }
+force_destroy     = false
+enable_versioning = true

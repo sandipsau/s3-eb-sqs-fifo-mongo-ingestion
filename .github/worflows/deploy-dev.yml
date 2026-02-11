@@ -1,0 +1,77 @@
+name: deploy-dev
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "app/**"
+      - "helm/**"
+      - "Dockerfile"
+      - ".github/workflows/deploy-dev.yml"
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: deploy-dev
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/github-actions-deploy-dev
+          aws-region: us-east-2
+
+      - name: Setup Terraform (for reading outputs only)
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.6.6"
+
+      - name: Terraform init (to read outputs)
+        working-directory: infra/terraform/envs/dev
+        run: terraform init
+
+      - name: Read Terraform outputs
+        id: tfout
+        working-directory: infra/terraform/envs/dev
+        run: |
+          echo "sqs_fifo_url=$(terraform output -raw sqs_fifo_url)" >> $GITHUB_OUTPUT
+          echo "event_rule_arn=$(terraform output -raw event_rule_arn)" >> $GITHUB_OUTPUT
+
+      # ---- Build & Push Image (example skeleton) ----
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push image to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ingestion-service
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
+
+      # ---- Configure kubectl for EKS ----
+      - name: Configure kubectl for EKS
+        run: |
+          aws eks update-kubeconfig --region us-east-2 --name my-eks-cluster-dev
+
+      # ---- Helm deploy ----
+      - name: Deploy via Helm
+        run: |
+          helm upgrade --install ingestion ./helm/ingestion \
+            --namespace ingestion --create-namespace \
+            --set image.repository=${IMAGE_URI%:*} \
+            --set image.tag=${IMAGE_URI##*:} \
+            --set env.SQS_QUEUE_URL="${{ steps.tfout.outputs.sqs_fifo_url }}" \
+            --set env.AWS_REGION="us-east-2"

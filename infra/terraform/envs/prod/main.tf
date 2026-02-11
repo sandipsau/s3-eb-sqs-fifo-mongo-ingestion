@@ -21,6 +21,9 @@ module "pipeline" {
   key_prefix       = var.key_prefix
   source_system    = var.source_system
   message_group_id = var.message_group_id
+  force_destroy     = var.force_destroy
+  enable_versioning = var.enable_versioning
 
   tags = var.tags
+
 }

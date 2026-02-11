@@ -1,0 +1,60 @@
+name: infra-dev
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "infra/terraform/**"
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: infra-dev
+  cancel-in-progress: false
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/github-actions-terraform-dev
+          aws-region: us-east-2
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.6.6"
+
+      - name: Terraform fmt (check)
+        working-directory: infra/terraform
+        run: terraform fmt -check -recursive
+
+      - name: Terraform init
+        working-directory: infra/terraform/envs/dev
+        run: terraform init
+
+      - name: Terraform validate
+        working-directory: infra/terraform/envs/dev
+        run: terraform validate
+
+      - name: Terraform plan
+        working-directory: infra/terraform/envs/dev
+        run: terraform plan -out=tfplan
+
+      - name: Terraform apply
+        working-directory: infra/terraform/envs/dev
+        run: terraform apply -auto-approve tfplan
+
+      - name: Print key outputs (for visibility)
+        working-directory: infra/terraform/envs/dev
+        run: |
+          echo "SQS FIFO URL: $(terraform output -raw sqs_fifo_url)"
+          echo "Event Rule ARN: $(terraform output -raw event_rule_arn)"
