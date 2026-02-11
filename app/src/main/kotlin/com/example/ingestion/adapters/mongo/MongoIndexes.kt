@@ -27,10 +27,8 @@ class MongoIndexes(private val template: ReactiveMongoTemplate) {
       .on("sourceBucket", Sort.Direction.ASC)
       .on("sourceKey", Sort.Direction.ASC)
 
-    Mono.when(
-      template.indexOps(IngestionJobDoc::class.java).ensureIndex(jobIndex),
-      template.indexOps(MaterialTaxNodeDoc::class.java).ensureIndex(dataIndex),
-    )
+    template.indexOps(IngestionJobDoc::class.java).ensureIndex(jobIndex)
+      .then(template.indexOps(MaterialTaxNodeDoc::class.java).ensureIndex(dataIndex))
       .doOnSuccess { log.info("Mongo indexes ensured") }
       .doOnError { log.warn("Failed ensuring indexes", it) }
       .subscribe()

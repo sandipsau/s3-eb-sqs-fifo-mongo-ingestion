@@ -21,6 +21,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-validation")
   implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
 
+  implementation("io.projectreactor:reactor-core:3.5.11")
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
   implementation("io.micrometer:micrometer-registry-prometheus")
 
