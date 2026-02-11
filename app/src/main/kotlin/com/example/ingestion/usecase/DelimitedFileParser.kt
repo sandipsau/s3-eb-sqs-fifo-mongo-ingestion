@@ -17,7 +17,7 @@ class DelimitedFileParser(
       require(parts.size == 2) { "Invalid line (expected 2 columns): $line" }
       MaterialTaxNode(
         materialNo = parts[0].trim(),
-        workstationTaxNodeId = parts[1].trim(),
+        taxNodeId = parts[1].trim(),
       )
     }
   }

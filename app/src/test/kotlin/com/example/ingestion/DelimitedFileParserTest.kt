@@ -17,6 +17,6 @@ class DelimitedFileParserTest {
 
     assertEquals(2, rows.size)
     assertEquals("31KZ71", rows[0].materialNo)
-    assertEquals("2356", rows[0].workstationTaxNodeId)
+    assertEquals("2356", rows[0].taxNodeId)
   }
 }

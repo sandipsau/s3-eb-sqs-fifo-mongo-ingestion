@@ -29,7 +29,7 @@ class MongoMaterialTaxNodeRepository(
           .and("sourceKey").`is`(key)
       )
       val u = Update()
-        .set("workstationTaxNodeId", row.workstationTaxNodeId)
+        .set("workstationTaxNodeId", row.taxNodeId)
         .set("ingestedAt", now)
         .setOnInsert("materialNo", row.materialNo)
         .setOnInsert("sourceBucket", bucket)

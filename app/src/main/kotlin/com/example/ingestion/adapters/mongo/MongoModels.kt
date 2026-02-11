@@ -21,7 +21,7 @@ data class IngestionJobDoc(
 data class MaterialTaxNodeDoc(
   @Id val id: String? = null,
   val materialNo: String,
-  val workstationTaxNodeId: String,
+  val taxNodeId: String,
   val sourceBucket: String,
   val sourceKey: String,
   val ingestedAt: Instant
